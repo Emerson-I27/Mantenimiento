@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ensamblaje y Mantenimiento de PC | Presentación Tech-Neon</title>
+
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Google Fonts: Tech & Modern -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Librerías para la descarga en PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        /* ============================================
+           VARIABLES GLOBALES - PALETA TECH NEÓN
+           ============================================ */
+        :root {
+            --bg: #030014;
+            --bg-2: #0a0a2e;
+            --cyan: #00f0ff;
+            --magenta: #ff006e;
+            --purple: #b537f2;
+            --green: #39ff14;
+            --yellow: #ffe600;
+            --text: #e6f1ff;
+            --text-dim: #94a3b8;
+            --card: rgba(15, 23, 42, 0.75);
+            --border: rgba(0, 240, 255, 0.2);
+            --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.5);
+            --glow-magenta: 0 0 20px rgba(255, 0, 110, 0.5);
+            --glow-purple: 0 0 20px rgba(181, 55, 242, 0.5);
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-body);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ============================================
+           FONDO ANIMADO: GRID + PARTÍCULAS + NEBULOSA
+           ============================================ */
+        .bg-nebula {
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 20%, rgba(0, 240, 255, 0.10), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(181, 55, 242, 0.10), transparent),
+                radial-gradient(ellipse 50% 60% at 50% 50%, rgba(255, 0, 110, 0.05), transparent);
+            animation: nebulaPulse 8s ease-in-out infinite alternate;
+        }
+        @keyframes nebulaPulse {
+            0% { opacity: 0.7; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.05); }
+        }
+
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0;
+            background-image:
+                linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: gridDrift 25s linear infinite;
+        }
+        @keyframes gridDrift {
+            0% { background-position: 0 0, 0 0; }
+            100% { background-position: 60px 60px, 60px 60px; }
+        }
+
+        .particles-container {
+            position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: floatParticle linear infinite;
+            pointer-events: none;
+        }
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) translateX(0) scale(0.5); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(-10vh) translateX(30px) scale(1); opacity: 0; }
+        }
+
+        /* ============================================
+           CONTENEDOR PRINCIPAL
+           ============================================ */
+        #presentation {
+            position: relative; z-index: 2;
+            width: 94vw; max-width: 1450px;
+            height: 92vh; max-height: 880px;
+            margin: 4vh auto;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: linear-gradient(145deg, rgba(10, 10, 46, 0.96), rgba(3, 0, 20, 0.99));
+            box-shadow:
+                0 0 80px rgba(0, 240, 255, 0.12),
+                0 0 140px rgba(181, 55, 242, 0.08),
+                inset 0 0 100px rgba(0, 240, 255, 0.02);
+            overflow: hidden;
+        }
+
+        /* Esquinas HUD decorativas */
+        .hud-corner {
+            position: absolute; width: 35px; height: 35px;
+            border: 2px solid var(--cyan); z-index: 50; pointer-events: none;
+            opacity: 0.7;
+        }
+        .hud-corner.tl { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+        .hud-corner.tr { top: 12px; right: 12px; border-left: none; border-bottom: none; }
+        .hud-corner.bl { bottom: 12px; left: 12px; border-right: none; border-top: none; }
+        .hud-corner.br { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+
+        /* Barra de progreso neón */
+        .progress-bar {
+            position: absolute; top: 0; left: 0; height: 3px;
+            background: linear-gradient(90deg, var(--cyan), var(--purple), var(--magenta));
+            width: 0%; z-index: 100;
+            box-shadow: 0 0 15px var(--cyan), 0 0 30px var(--purple);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Barra superior */
+        .top-bar {
+            position: absolute; top: 0; left: 0; right: 0; height: 48px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 28px;
+            background: rgba(3, 0, 20, 0.8);
+            border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+            z-index: 90; backdrop-filter: blur(12px);
+        }
+        .brand {
+            display: flex; align-items: center; gap: 12px;
+            font-family: var(--font-display); font-size: 0.85rem;
+            color: var(--cyan); letter-spacing: 3px;
+        }
+        .brand i { font-size: 1.2rem; filter: drop-shadow(0 0 8px var(--cyan)); }
+        .slide-counter {
+            font-family: var(--font-mono); font-size: 0.85rem;
+            color: var(--text-dim); letter-spacing: 1px;
+        }
+        .slide-counter .current { color: var(--cyan); font-weight: 700; font-size: 1rem; }
+
+        /* ============================================
+           DIAPOSITIVAS
+           ============================================ */
+        .slide {
+            position: absolute;
+            top: 48px; left: 0; right: 0; bottom: 65px;
+            padding: 25px 50px;
+            opacity: 0; visibility: hidden;
+            transform: scale(0.95) translateY(10px);
+            transition: opacity 0.5s ease, visibility 0.5s, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow-y: auto; overflow-x: hidden;
+        }
+        .slide.active {
+            opacity: 1; visibility: visible;
+            transform: scale(1) translateY(0);
+            z-index: 10;
+        }
+
+        /* Animaciones escalonadas para elementos */
+        .slide.active .anim { animation: animSlideIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; }
+        .slide.active .anim:nth-child(1) { animation-delay: 0.05s; }
+        .slide.active .anim:nth-child(2) { animation-delay: 0.12s; }
+        .slide.active .anim:nth-child(3) { animation-delay: 0.19s; }
+        .slide.active .anim:nth-child(4) { animation-delay: 0.26s; }
+        .slide.active .anim:nth-child(5) { animation-delay: 0.33s; }
+        .slide.active .anim:nth-child(6) { animation-delay: 0.40s; }
+        .slide.active .anim:nth-child(7) { animation-delay: 0.47s; }
+        .slide.active .anim:nth-child(8) { animation-delay: 0.54s; }
+
+        @keyframes animSlideIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Scrollbar personalizada */
+        .slide::-webkit-scrollbar { width: 5px; }
+        .slide::-webkit-scrollbar-track { background: transparent; }
+        .slide::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 3px; }
+
+        /* ============================================
+           TIPOGRAFÍA Y COMPONENTES DE CONTENIDO
+           ============================================ */
+        .slide h1 {
+            font-family: var(--font-display);
+            font-size: 2.6rem; font-weight: 900;
+            background: linear-gradient(135deg, var(--cyan), var(--purple), var(--magenta));
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center; letter-spacing: 1px; line-height: 1.15;
+            margin-bottom: 12px;
+        }
+        .slide h2 {
+            font-family: var(--font-display); font-size: 1.6rem;
+            color: var(--cyan); margin-bottom: 20px; padding-bottom: 10px;
+            border-bottom: 2px solid rgba(0, 240, 255, 0.3);
+            display: flex; align-items: center; gap: 12px;
+            letter-spacing: 1px;
+        }
+        .slide h2 i { filter: drop-shadow(0 0 8px var(--cyan)); font-size: 1.4rem; }
+        .slide h3 {
+            font-family: var(--font-body); color: var(--purple);
+            font-size: 1.1rem; margin-bottom: 8px; letter-spacing: 0.5px;
+        }
+        .slide p { font-size: 1rem; line-height: 1.6; color: var(--text-dim); margin-bottom: 10px; }
+        .slide strong { color: var(--cyan); font-weight: 600; }
+
+        /* Listas */
+        .slide ul { list-style: none; padding: 0; }
+        .slide ul li {
+            position: relative; padding-left: 26px;
+            font-size: 0.98rem; line-height: 1.55;
+            color: var(--text-dim); margin-bottom: 8px;
+        }
+        .slide ul li::before {
+            content: '\f105'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; left: 2px; top: 0; color: var(--cyan); font-size: 1.1rem;
+        }
+        .slide ol { padding-left: 22px; }
+        .slide ol li {
+            font-size: 0.98rem; line-height: 1.6;
+            color: var(--text-dim); margin-bottom: 6px;
+        }
+        .slide ol li::marker { color: var(--cyan); font-weight: 700; }
+
+        /* ============================================
+           SISTEMA DE GRILLAS Y TARJETAS
+           ============================================ */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .grid-2-3 { display: grid; grid-template-columns: 38% 62%; gap: 25px; align-items: start; }
+        .grid-3-2 { display: grid; grid-template-columns: 62% 38%; gap: 25px; align-items: start; }
+        .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+
+        /* Tarjeta genérica */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px; padding: 15px 18px;
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden;
+            backdrop-filter: blur(8px);
+        }
+        .card::after {
+            content: ''; position: absolute; top: 0; left: -100%;
+            width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            transition: left 0.6s ease;
+        }
+        .card:hover::after { left: 100%; }
+        .card:hover {
+            border-color: var(--cyan);
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.15), 0 0 15px rgba(0, 240, 255, 0.1);
+        }
+        .card h4 {
+            font-family: var(--font-display); font-size: 0.9rem;
+            color: var(--cyan); margin-bottom: 6px; letter-spacing: 1px;
+        }
+        .card p { font-size: 0.88rem; margin: 0; }
+
+        /* Tarjeta con icono */
+        .icon-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px 10px; text-align: center;
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(8px);
+        }
+        .icon-card:hover {
+            transform: translateY(-6px) scale(1.04);
+            border-color: var(--cyan);
+            box-shadow: 0 12px 35px rgba(0, 240, 255, 0.2);
+        }
+        .icon-card i {
+            font-size: 1.8rem; color: var(--cyan); margin-bottom: 8px;
+            display: block; filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.5));
+            transition: transform 0.3s ease;
+        }
+        .icon-card:hover i { transform: scale(1.15) rotate(-5deg); }
+        .icon-card span { font-size: 0.82rem; color: var(--text); font-weight: 500; display: block; line-height: 1.25; }
+
+        /* ============================================
+           MARCOS DE IMÁGENES CON EFECTO NEÓN
+           ============================================ */
+        .img-frame {
+            position: relative; border-radius: 10px; overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: var(--bg-2);
+        }
+        .img-frame:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 10px 40px rgba(0, 240, 255, 0.3);
+            border-color: var(--cyan);
+        }
+        .img-frame img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .img-frame:hover img { transform: scale(1.08); }
+        .img-frame .img-label {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 6px 10px;
+            background: linear-gradient(transparent, rgba(3, 0, 20, 0.95));
+            color: var(--cyan); font-family: var(--font-mono); font-size: 0.7rem;
+            letter-spacing: 1px; text-transform: uppercase;
+        }
+
+        /* Alturas predefinidas para imágenes */
+        .img-h-120 { height: 120px; }
+        .img-h-150 { height: 150px; }
+        .img-h-180 { height: 180px; }
+        .img-h-200 { height: 200px; }
+        .img-h-250 { height: 250px; }
+        .img-h-280 { height: 280px; }
+
+        /* ============================================
+           ALERTAS Y DESTACADOS
+           ============================================ */
+        .alert {
+            border-left: 3px solid var(--magenta);
+            background: rgba(255, 0, 110, 0.08);
+            padding: 10px 16px; border-radius: 8px;
+            margin-top: 12px; font-size: 0.92rem;
+        }
+        .alert i { color: var(--magenta); margin-right: 8px; }
+        .alert strong { color: var(--magenta); }
+
+        .alert-green {
+            border-left-color: var(--green);
+            background: rgba(57, 255, 20, 0.08);
+        }
+        .alert-green i, .alert-green strong { color: var(--green); }
+
+        /* ============================================
+           PORTADA Y DIAPOSITIVA DE GRACIAS
+           ============================================ */
+        .portada {
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            height: 100%;
+        }
+        .portada-icon {
+            font-size: 4.5rem; color: var(--cyan); margin-bottom: 20px;
+            filter: drop-shadow(0 0 40px var(--cyan));
+            animation: iconPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 40px var(--cyan)); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 60px var(--cyan)); }
+        }
+        .portada h1 { font-size: 2.8rem; max-width: 950px; margin-bottom: 12px; }
+        .portada .subtitle {
+            font-family: var(--font-mono); color: var(--text-dim);
+            font-size: 0.95rem; letter-spacing: 4px; text-transform: uppercase;
+            margin-bottom: 25px;
+        }
+        .portada .info {
+            font-family: var(--font-body); color: var(--purple);
+            font-size: 1rem; letter-spacing: 2px;
+        }
+        .neon-line {
+            width: 250px; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyan), var(--magenta), transparent);
+            margin: 18px auto; box-shadow: 0 0 10px var(--cyan);
+        }
+
+        /* ============================================
+           VIDEO Y BOTÓN DE DESCARGA
+           ============================================ */
+        .video-container {
+            position: relative; padding-bottom: 45%; height: 0;
+            overflow: hidden; border-radius: 10px;
+            border: 1px solid var(--border); margin: 15px 0;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
+        }
+        .video-container iframe {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
+        }
+
+        .download-section {
+            text-align: center; margin-top: 18px;
+            padding-top: 15px; border-top: 1px dashed rgba(0, 240, 255, 0.3);
+        }
+        .btn-download {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 12px 28px; font-family: var(--font-display); font-size: 0.9rem;
+            font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+            color: var(--bg); background: linear-gradient(135deg, var(--cyan), var(--purple));
+            border: none; border-radius: 10px; cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
+        }
+        .btn-download:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 0 50px rgba(0, 240, 255, 0.8);
+        }
+        .btn-download:disabled { opacity: 0.6; cursor: wait; }
+        .btn-download i { font-size: 1.1rem; }
+
+        /* ============================================
+           NAVEGACIÓN INFERIOR
+           ============================================ */
+        .controls {
+            position: absolute; bottom: 14px; right: 22px;
+            display: flex; gap: 10px; z-index: 100;
+        }
+        .nav-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(0, 240, 255, 0.08);
+            border: 1px solid var(--cyan); color: var(--cyan);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 0.95rem; transition: all 0.3s ease;
+            backdrop-filter: blur(6px);
+        }
+        .nav-btn:hover:not(:disabled) {
+            background: var(--cyan); color: var(--bg);
+            box-shadow: 0 0 20px var(--cyan);
+        }
+        .nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+        .dots {
+            position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 7px; z-index: 100;
+        }
+        .dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: rgba(148, 163, 184, 0.4);
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .dot.active {
+            background: var(--cyan); box-shadow: 0 0 10px var(--cyan);
+            width: 22px; border-radius: 4px;
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 1000px) {
+            #presentation { width: 97vw; height: 95vh; margin: 2.5vh auto; }
+            .slide { padding: 18px 20px; top: 48px; bottom: 60px; }
+            .slide h1 { font-size: 1.7rem; }
+            .slide h2 { font-size: 1.15rem; }
+            .grid-2, .grid-3, .grid-4, .grid-5, .grid-2-3, .grid-3-2 { grid-template-columns: 1fr; gap: 12px; }
+            .portada h1 { font-size: 1.7rem; }
+            .portada-icon { font-size: 3rem; }
+            .dots { display: none; }
+            .btn-download { font-size: 0.78rem; padding: 10px 18px; }
+        }
+
+        /* Modo descarga: desactiva animaciones para captura limpia */
+        body.downloading .slide *,
+        body.downloading .particle { animation: none !important; }
+        body.downloading .slide { overflow: visible !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Capas de fondo -->
+    <div class="bg-nebula"></div>
+    <div class="bg-grid"></div>
+    <div class="particles-container" id="particles"></div>
+
+    <!-- Contenedor principal -->
+    <div id="presentation">
+        <div class="hud-corner tl"></div>
+        <div class="hud-corner tr"></div>
+        <div class="hud-corner bl"></div>
+        <div class="hud-corner br"></div>
+
+        <div class="progress-bar" id="progressBar"></div>
+
+        <!-- Barra superior -->
+        <div class="top-bar">
+            <div class="brand">
+                <i class="fas fa-microchip"></i>
+                <span>PC_MASTER // TECH LAB</span>
+            </div>
+            <div class="slide-counter">
+                <span class="current" id="currentNum">01</span> / <span id="totalNum">20</span>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVAS
+             ============================================================ -->
+
+        <!-- 1. PORTADA -->
+        <div class="slide portada active" data-slide="1">
+            <div class="anim"><i class="fas fa-microchip portada-icon"></i></div>
+            <h1 class="anim">Ensamblaje y Mantenimiento de Computadoras</h1>
+            <p class="subtitle anim">Hardware · CPU · Pasta Térmica · Mantenimiento Preventivo</p>
+            <div class="neon-line anim"></div>
+        </div>
+
+        <!-- 2. INTEGRANTES (5 PERSONAS) -->
+        <div class="slide" data-slide="2">
+            <h2 class="anim"><i class="fas fa-users"></i> Integrantes del Equipo</h2>
+            <div class="grid-5" style="margin-top: 30px;">
+                <div class="card anim" style="text-align:center; padding: 18px 8px;">
+                    <i class="fas fa-user-astronaut" style="font-size:2.2rem;color:var(--cyan);margin-bottom:10px;"></i>
+                    <h4>Emerson Imbaquingo</h4>
+                    <p style="font-size:0.8rem;">Diapositivas/Investigador</p>
+                </div>
+                <div class="card anim" style="text-align:center; padding: 18px 8px;">
+                    <i class="fas fa-user-astronaut" style="font-size:2.2rem;color:var(--purple);margin-bottom:10px;"></i>
+                    <h4>Eric Huera</h4>
+                    <p style="font-size:0.8rem;">Editor</p>
+                </div>
+                <div class="card anim" style="text-align:center; padding: 18px 8px;">
+                    <i class="fas fa-user-astronaut" style="font-size:2.2rem;color:var(--magenta);margin-bottom:10px;"></i>
+                    <h4>Justyn Guadir</h4>
+                    <p style="font-size:0.8rem;">Investigador</p>
+                </div>
+                <div class="card anim" style="text-align:center; padding: 18px 8px;">
+                    <i class="fas fa-user-astronaut" style="font-size:2.2rem;color:var(--green);margin-bottom:10px;"></i>
+                    <h4>Sebastian Gallegos</h4>
+                    <p style="font-size:0.8rem;">Editor</p>
+                </div>
+                <div class="card anim" style="text-align:center; padding: 18px 8px;">
+                    <i class="fas fa-user-astronaut" style="font-size:2.2rem;color:var(--yellow);margin-bottom:10px;"></i>
+                    <h4>Alexandre Imba</h4>
+                    <p style="font-size:0.8rem;">Investigador/Video</p>
+                </div>
+            </div>
+            <div class="alert anim" style="margin-top: 30px; text-align:center;">
+                <i class="fas fa-graduation-cap"></i>
+                <strong>Objetivo del equipo:</strong> Presentar de forma clara y práctica los fundamentos del ensamblaje y mantenimiento de una PC de escritorio.
+            </div>
+        </div>
+
+        <!-- 3. AGENDA -->
+        <div class="slide" data-slide="3">
+            <h2 class="anim"><i class="fas fa-list-check"></i> Agenda de la Presentación</h2>
+            <div class="grid-2" style="margin-top: 20px;">
+                <div class="card anim">
+                    <h4><i class="fas fa-microchip"></i> 01. El Procesador (CPU)</h4>
+                    <p>Partes internas, marcas (Intel/AMD) y tipos según su uso.</p>
+                </div>
+                <div class="card anim">
+                    <h4><i class="fas fa-fire"></i> 02. Calor y Pasta Térmica</h4>
+                    <p>Por qué se calienta, tipos de pasta y aplicación correcta.</p>
+                </div>
+                <div class="card anim">
+                    <h4><i class="fas fa-tools"></i> 03. Herramientas y Seguridad</h4>
+                    <p>Kit necesario y medidas antiestáticas antes de desarmar.</p>
+                </div>
+                <div class="card anim">
+                    <h4><i class="fas fa-screwdriver-wrench"></i> 04. Mantenimiento Paso a Paso</h4>
+                    <p>Desensamblaje, limpieza, ensamblaje y comprobación final.</p>
+                </div>
+            </div>
+            <div class="grid-4 anim" style="margin-top:20px;">
+                <div class="img-frame img-h-120"><img src="https://images.unsplash.com/photo-1555617981-dac3880eac6e?q=80&w=800&auto=format&fit=crop" alt="CPU"><div class="img-label">CPU</div></div>
+                <div class="img-frame img-h-120"><img src="https://acf.geeknetic.es/imgri/imagenes/auto/20/06/17/eaj-jgv-71t7np6iz6l-sl1500.jpg?f=webp" alt="Pasta térmica"><div class="img-label">Pasta Térmica</div></div>
+                <div class="img-frame img-h-120"><img src="https://i0.wp.com/www.tuprogramaras.com/wp-content/uploads/2014/03/tools.jpg?w=438&ssl=1" alt="Herramientas"><div class="img-label">Herramientas</div></div>
+                <div class="img-frame img-h-120"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSXPxdlkXUSLTruSHiKpDQRCSr-BgG8PQ8kMDNmWmh3k48a3rjPVS3ViI&s=10" alt="Ensamblaje"><div class="img-label">Ensamblaje</div></div>
+            </div>
+        </div>
+
+        <!-- 4. QUÉ ES EL PROCESADOR -->
+        <div class="slide" data-slide="4">
+            <h2 class="anim"><i class="fas fa-microchip"></i> El Procesador (CPU): El Cerebro</h2>
+            <div class="grid-3-2">
+                <div>
+                    <p class="anim">La <strong>CPU (Unidad Central de Procesamiento)</strong> es el chip principal de la computadora. Interpreta y ejecuta las instrucciones de los programas y coordina todos los componentes del sistema. Se conecta a la placa base mediante el <strong>zócalo (socket)</strong> y su rendimiento se mide en <strong>núcleos, hilos y frecuencia (GHz)</strong>.</p>
+                    <ul>
+                        <li class="anim">Realiza <strong>millones de operaciones por segundo</strong>.</li>
+                        <li class="anim">Genera calor, por eso necesita un <strong>disipador + pasta térmica</strong>.</li>
+                        <li class="anim">Es el componente que determina en gran medida la <strong>velocidad del sistema</strong>.</li>
+                    </ul>
+                </div>
+                <div class="img-frame img-h-250 anim">
+                    <img src="https://images.unsplash.com/photo-1555617981-dac3880eac6e?q=80&w=1000&auto=format&fit=crop" alt="Procesador">
+                    <div class="img-label">CPU · Vista Superior</div>
+                </div>
+            </div>
+            <div class="grid-4 anim" style="margin-top:20px;">
+                <div class="img-frame img-h-120"><img src="https://www.profesionalreview.com/wp-content/uploads/2019/06/Partes-de-un-procesador-05.jpg" alt="Circuito"><div class="img-label">Circuito interno</div></div>
+                <div class="img-frame img-h-120"><img src="https://previews.123rf.com/images/electronphoto/electronphoto1511/electronphoto151100011/48599691-cpu-socket-close-up.jpg" alt="Socket"><div class="img-label">Zócalo CPU</div></div>
+                <div class="img-frame img-h-120"><img src="https://images.unsplash.com/photo-1587202372634-32705e3bf49c?q=80&w=800&auto=format&fit=crop" alt="Disipador"><div class="img-label">Disipador</div></div>
+                <div class="img-frame img-h-120"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTds2ojex-ToR72YpBCgYDfuUrxz2by2JfFOmv8yo-OIUl4ytW1ZBkQRA6i&s=10" alt="Motherboard"><div class="img-label">Placa base</div></div>
+            </div>
+        </div>
+
+        <!-- 5. PARTES DEL PROCESADOR -->
+        <div class="slide" data-slide="5">
+            <h2 class="anim"><i class="fas fa-cogs"></i> Partes Principales del Procesador</h2>
+            <div class="grid-2-3">
+                <div class="img-frame img-h-280 anim">
+                    <img src="https://blogarquitectura2013.wordpress.com/wp-content/uploads/2013/11/83441-partesdeunmicroprocesador.jpg?w=455&h=390" alt="Interior CPU">
+                    <div class="img-label">Interior del CPU</div>
+                </div>
+                <div>
+                    <div class="card anim" style="margin-bottom:10px;">
+                        <h4><i class="fas fa-sitemap"></i> Unidad de Control (UC)</h4>
+                        <p>Dirige y coordina todas las operaciones del procesador.</p>
+                    </div>
+                    <div class="card anim" style="margin-bottom:10px;">
+                        <h4><i class="fas fa-calculator"></i> Unidad Aritmético-Lógica (ALU)</h4>
+                        <p>Realiza operaciones matemáticas y lógicas.</p>
+                    </div>
+                    <div class="card anim" style="margin-bottom:10px;">
+                        <h4><i class="fas fa-memory"></i> Registros y Memoria Caché</h4>
+                        <p>Almacenamiento ultrarrápido para datos de uso inmediato.</p>
+                    </div>
+                    <div class="card anim">
+                        <h4><i class="fas fa-route"></i> Buses de Datos</h4>
+                        <p>Canales que transportan la información entre componentes.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="grid-4 anim" style="margin-top:15px;">
+                <div class="img-frame img-h-110"><img src="https://i0.wp.com/codigoespagueti.com/wp-content/uploads/2021/02/CPU-nucleos.jpg?resize=640%2C396&ssl=1" alt="CPU 1"><div class="img-label">Núcleos</div></div>
+                <div class="img-frame img-h-110"><img src="https://hardzone.es/app/uploads-hardzone.es/2020/01/CPU-cache-1.jpg" alt="CPU 2"><div class="img-label">Caché</div></div>
+                <div class="img-frame img-h-110"><img src="https://t1.gstatic.com/images?q=tbn:ANd9GcTIFmsavmpwmzA9twhGtY3ZwTPuTYxbTYoyxjaRuxsDZpwfQcV3pw" alt="CPU 3"><div class="img-label">Control</div></div>
+                <div class="img-frame img-h-110"><img src="https://examtimeassets.s3.amazonaws.com/uploads/media/image/16612291/desktop_b29f2b9a-8b3e-4755-89d0-0bc5e6bd6f8c.jpg" alt="CPU 4"><div class="img-label">ALU</div></div>
+            </div>
+        </div>
+
+        <!-- 6. MARCAS DE PROCESADORES -->
+        <div class="slide" data-slide="6">
+            <h2 class="anim"><i class="fas fa-trademark"></i> Tipos de Procesadores según la Marca</h2>
+            <div class="grid-2">
+                <div class="card anim">
+                    <h4 style="color: #0071c5;"><i class="fas fa-square"></i> INTEL</h4>
+                    <ul style="margin-top:8px;">
+                        <li><strong>Core i5 / Ultra 5:</strong> Gama baja / entrada.</li>
+                        <li><strong>Core i7 / Ultra 7:</strong> Gama media.</li>
+                        <li><strong>Core i9 / Ultra 9:</strong> Gama alta.</li>
+                        <li><strong>Xeon:</strong> Servidores y estaciones de trabajo.</li>
+                    </ul>
+                </div>
+                <div class="card anim">
+                    <h4 style="color: #ed1c24;"><i class="fas fa-square"></i> AMD</h4>
+                    <ul style="margin-top:8px;">
+                        <li><strong>Ryzen 5:</strong> Gama baja / entrada.</li>
+                        <li><strong>Ryzen 7:</strong> Gama media.</li>
+                        <li><strong>Ryzen 9:</strong> Gama alta.</li>
+                        <li><strong>Threadripper / EPYC:</strong> Workstation y servidores.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="alert anim" style="margin-top:15px;">
+                <i class="fas fa-circle-info"></i>
+                <strong>Dato clave:</strong> Intel y AMD usan zócalos diferentes. Un procesador Intel no entra en una placa base AMD (y viceversa).[reference:0]
+            </div>
+            <div class="grid-4 anim" style="margin-top:15px;">
+                <div class="img-frame img-h-120"><img src="https://invictuspc.mx/chips/core-i9.webp?v=f239899e" alt="Intel"><div class="img-label">Intel</div></div>
+                <div class="img-frame img-h-120"><img src="https://http2.mlstatic.com/D_NQ_NP_763007-MLA92861384693_092025-O.webp" alt="AMD"><div class="img-label">AMD</div></div>
+                <div class="img-frame img-h-120"><img src="https://acf.geeknetic.es/Imagenes/Tutoriales/2021/2430-amd-ryzen-9-7950x/2430-amd-ryzen-9-7950x-cabecera.jpg" alt="Socket"><div class="img-label">Zócalos</div></div>
+                <div class="img-frame img-h-120"><img src="https://www.asus.com/microsite/motherboard/intel-ultra-series-2-arrow-lake-s-z890-h810-b860/es/v1/img/series/rog-strix-b860-f-wifi.png" alt="Placa base"><div class="img-label">Placa base</div></div>
+            </div>
+        </div>
+
+        <!-- 7. TIPOS SEGÚN USO -->
+        <div class="slide" data-slide="7">
+            <h2 class="anim"><i class="fas fa-desktop"></i> Tipos de Procesadores según su Uso</h2>
+            <div class="grid-3">
+                <div class="card anim">
+                    <h4><i class="fas fa-desktop"></i> Escritorio (Desktop)</h4>
+                    <p>Máximo rendimiento para gaming, edición y productividad. Intel Core / AMD Ryzen.</p>
+                </div>
+                <div class="card anim">
+                    <h4><i class="fas fa-server"></i> Servidores</h4>
+                    <p>Fiabilidad 24/7 y multitarea intensiva. Intel Xeon / AMD EPYC.</p>
+                </div>
+                <div class="card anim">
+                    <h4><i class="fas fa-mobile-screen"></i> Móviles</h4>
+                    <p>Eficiencia energética para laptops y smartphones. ARM, Intel U-series.</p>
+                </div>
+            </div>
+            <div class="grid-3 anim" style="margin-top:18px;">
+                <div class="img-frame img-h-200"><img src="https://images.unsplash.com/photo-1587202372634-32705e3bf49c?q=80&w=800&auto=format&fit=crop" alt="PC Escritorio"><div class="img-label">Desktop PC</div></div>
+                <div class="img-frame img-h-200"><img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=800&auto=format&fit=crop" alt="Servidor"><div class="img-label">Servidor</div></div>
+                <div class="img-frame img-h-200"><img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=800&auto=format&fit=crop" alt="Laptop"><div class="img-label">Móvil / Laptop</div></div>
+            </div>
+        </div>
+
+        <!-- 8. POR QUÉ SE CALIENTA -->
+        <div class="slide" data-slide="8">
+            <h2 class="anim"><i class="fas fa-thermometer-half"></i> ¿Por qué se Calienta el Procesador?</h2>
+            <div class="grid-2">
+                <div>
+                    <p class="anim">Al ejecutar millones de operaciones por segundo, los transistores del CPU generan calor como subproducto. Sin una buena refrigeración, la temperatura sube y el rendimiento cae.</p>
+                    <ul>
+                        <li class="anim"><strong>Ventilación deficiente:</strong> gabinete cerrado o mal ubicado.</li>
+                        <li class="anim"><strong>Polvo acumulado:</strong> obstruye disipadores y ventiladores.</li>
+                        <li class="anim"><strong>Pasta térmica seca:</strong> pierde conductividad con el tiempo.</li>
+                        <li class="anim"><strong>Disipador defectuoso:</strong> ventilador o base en mal estado.</li>
+                        <li class="anim"><strong>Cargas exigentes:</strong> gaming, edición, renderizado.</li>
+                        <li class="anim"><strong>Overclocking:</strong> forzar el CPU más allá de sus límites.</li>
+                    </ul>
+                </div>
+                <div class="grid-2" style="gap:12px;">
+                    <div class="img-frame img-h-180 anim"><img src="https://http2.mlstatic.com/D_NQ_NP_811545-MLA95980686288_102025-O.webp" alt="Disipador"><div class="img-label">Disipador</div></div>
+                    <div class="img-frame img-h-180 anim"><img src="https://i.redd.it/qcou9o676zmc1.jpg" alt="Pasta seca"><div class="img-label">Pasta degradada</div></div>
+                    <div class="img-frame img-h-180 anim"><img src="https://nanotech-market.com/wp-content/uploads/2024/03/60396cef84b4d.webp" alt="Ventilador"><div class="img-label">Ventilador</div></div>
+                    <div class="img-frame img-h-180 anim"><img src="https://www.profesionalreview.com/wp-content/uploads/2019/09/AMD-3000-disipador-Intel-02.jpg" alt="Temperatura"><div class="img-label">Temperatura alta</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. TIPOS DE PASTA TÉRMICA -->
+        <div class="slide" data-slide="9">
+            <h2 class="anim"><i class="fas fa-fill-drip"></i> Tipos de Pasta Térmica</h2>
+            <div class="grid-2" style="margin-bottom:12px;">
+                <div class="img-frame img-h-150 anim"><img src="Silicona.jfif" alt="Pasta Térmica"><div class="img-label">Silicona/Ceramica</div></div>
+                <div class="img-frame img-h-150 anim"><img src="metal1.jpg" alt="Ensamblaje"><div class="img-label">Metal(Plata7Aluminio)/Metal Liquido</div></div>
+            </div>
+            <div class="grid-4">
+                <div class="card anim">
+                    <h4><i class="fas fa-droplet"></i> Silicona</h4>
+                    <p>Económica y segura (no conduce electricidad). Bajo rendimiento térmico.[reference:1]</p>
+                </div>
+                <div class="card anim">
+                    <h4><i class="fas fa-cube"></i> Cerámica</h4>
+                    <p>Buen equilibrio precio/rendimiento. No conductora. Recomendada para la mayoría.[reference:2]</p>
+                </div>
+                <div class="card anim">
+                    <h4><i class="fas fa-coins"></i> Metal (Plata/Aluminio)</h4>
+                    <p>Alta conductividad, pero <strong>conduce electricidad</strong>. Para expertos.[reference:3]</p>
+                </div>
+                <div class="card anim">
+                    <h4><i class="fas fa-skull-crossbones"></i> Metal Líquido</h4>
+                    <p>Máximo rendimiento. Muy difícil de aplicar y peligroso (conduce electricidad).[reference:4]</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. CUÁNDO CAMBIAR -->
+        <div class="slide" data-slide="10">
+            <h2 class="anim"><i class="fas fa-calendar-check"></i> ¿Cuándo Cambiar la Pasta Térmica?</h2>
+            <div class="grid-3-2">
+                <div>
+                    <div class="card anim" style="margin-bottom:10px;">
+                        <h4><i class="fas fa-clock"></i> Regla general</h4>
+                        <p>Cada <strong>1 a 3 años</strong> según el uso del equipo.[reference:5]</p>
+                    </div>
+                    <div class="card anim" style="margin-bottom:10px;">
+                        <h4><i class="fas fa-triangle-exclamation"></i> Señales de alerta</h4>
+                        <p>Temperaturas altas, ventilador ruidoso, apagados repentinos o lentitud.</p>
+                    </div>
+                    <div class="card anim">
+                        <h4><i class="fas fa-screwdriver"></i> Al desmontar</h4>
+                        <p>Siempre que retires el disipador, debes limpiar y reaplicar.</p>
+                    </div>
+                </div>
+                <div class="grid-2" style="gap:10px;">
+                    <div class="img-frame img-h-120 anim"><img src="https://hardzone.es/app/uploads-hardzone.es/2021/10/pasta-termica.png?x=500&y=295&quality=80" alt="Limpieza"><div class="img-label">Limpieza</div></div>
+                    <div class="img-frame img-h-120 anim"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTlSKvZi338ejl_LkermdDmQW3-xBhJdooE738_LlihXrGDg-YJFTZI9uE&s=10"><div class="img-label">Aplicación</div></div>
+                    <div class="img-frame img-h-120 anim"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAMjqzttqaxi8MVgqeiMDjMXT1UATwltNhW4po-GczIgxYjLGtxzW2G_Q&s=10" alt="CPU"><div class="img-label">CPU</div></div>
+                    <div class="img-frame img-h-120 anim"><img src="https://i.ytimg.com/vi/2p6oJN-WfTI/maxresdefault.jpg" alt="Herramientas"><div class="img-label">Herramientas</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. QUÉ PASA SIN PASTA -->
+        <div class="slide" data-slide="11">
+            <h2 class="anim"><i class="fas fa-triangle-exclamation" style="color:var(--magenta);"></i> ¿Qué Pasa si NO se Usa Pasta Térmica?</h2>
+            <div class="grid-2-3">
+                <div class="img-frame img-h-280 anim" style="border-color:var(--magenta);">
+                    <img src="calor.jfif" alt="CPU Riesgo">
+                    <div class="img-label" style="color:var(--magenta);">Riesgo de daño</div>
+                </div>
+                <div>
+                    <div class="alert anim" style="border-left:3px solid var(--magenta);">
+                        <i class="fas fa-times-circle"></i>
+                        <strong>Sin pasta térmica, la transferencia de calor es muy pobre.</strong> El aire atrapado entre las superficies actúa como aislante.[reference:6]
+                    </div>
+                    <ul style="margin-top:12px;">
+                        <li class="anim"><strong>Sobrecalentamiento rápido:</strong> el CPU llega a 90-100°C en segundos.</li>
+                        <li class="anim"><strong>Thermal Throttling:</strong> el sistema reduce la frecuencia para no quemarse.</li>
+                        <li class="anim"><strong>Apagados inesperados:</strong> protección automática del hardware.</li>
+                        <li class="anim"><strong>Daño permanente:</strong> en casos extremos, el procesador se quema.</li>
+                        <li class="anim"><strong>Vida útil reducida:</strong> el desgaste del chip se acelera.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="grid-4 anim" style="margin-top:15px;">
+                <div class="img-frame img-h-100"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNz8d-GqqxwY8PZ--YdSHk1esgLGoRREOuaYJqz46wqKtJ2aHOPyzmo01a&s=10" alt="Calor"><div class="img-label">Calor extremo</div></div>
+                <div class="img-frame img-h-100"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTis1QrfQMkiL3bPsxao9w7D_qBNKBV6eC9lIQXkePR5Y5DbNFAX8LdTtg&s=10" alt="Pasta"><div class="img-label">Sin pasta</div></div>
+                <div class="img-frame img-h-100"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSki_DtCYSQKmDuaYv4A2eYbLD3AbVg4N0ycQNE1odeKGB5fuDvHvqW3CI&s=10" alt="Riesgo"><div class="img-label">Riesgo</div></div>
+                <div class="img-frame img-h-100"><img src="https://images.unsplash.com/photo-1555617981-dac3880eac6e?q=80&w=800&auto=format&fit=crop" alt="Daño"><div class="img-label">Daño</div></div>
+            </div>
+        </div>
+
+        <!-- 12. RECOMENDACIONES -->
+        <div class="slide" data-slide="12">
+            <h2 class="anim"><i class="fas fa-check-circle"></i> Recomendaciones al Aplicar Pasta Térmica</h2>
+            <div class="grid-2">
+                <div>
+                    <ol style="font-size:0.95rem;">
+                        <li class="anim"><strong>Limpia bien:</strong> retira la pasta vieja con alcohol isopropílico y paño sin pelusa.[reference:7]</li>
+                        <li class="anim"><strong>Cantidad exacta:</strong> grano de arroz o lenteja en el centro.[reference:8]</li>
+                        <li class="anim"><strong>No esparzas:</strong> la presión del disipador la distribuye sola.[reference:9]</li>
+                        <li class="anim"><strong>Instala el disipador:</strong> presión uniforme, sin moverlo en exceso.</li>
+                        <li class="anim"><strong>Verifica temperaturas:</strong> usa software como HWMonitor.[reference:10]</li>
+                        <li class="anim"><strong>No reutilices pasta:</strong> la pasta vieja pierde propiedades.</li>
+                    </ol>
+                </div>
+                <div class="grid-2" style="gap:10px;">
+                    <div class="img-frame img-h-130 anim"><img src="https://www.achorao.com/cdn/shop/articles/IMG_5E103F81EF4D-1.jpg?v=1771692120" alt="Aplicación"><div class="img-label">Cantidad</div></div>
+                    <div class="img-frame img-h-130 anim"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTb0FD9TLlZtEL3jnsC-AmTBzMyw66Wd1_kElPyy5Eo7j1Uqs1YouOcanF7&s=10" alt="Disipador"><div class="img-label">Disipador</div></div>
+                    <div class="img-frame img-h-130 anim"><img src="https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?q=80&w=800&auto=format&fit=crop" alt="Limpieza"><div class="img-label">Limpieza</div></div>
+                    <div class="img-frame img-h-130 anim"><img src="https://www.info-computer.com/img/cms/disipador.jpg" alt="Herramientas"><div class="img-label">Kit</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 13. HERRAMIENTAS -->
+        <div class="slide" data-slide="13">
+            <h2 class="anim"><i class="fas fa-toolbox"></i> Herramientas para Desarmar una PC</h2>
+            <div class="grid-2-3">
+                <div class="grid-2" style="gap:10px;">
+                    <div class="icon-card anim"><i class="fas fa-screwdriver"></i><span>Destornilladores Phillips y planos</span></div>
+                    <div class="icon-card anim"><i class="fas fa-shield-halved"></i><span>Pulsera antiestática</span></div>
+                    <div class="icon-card anim"><i class="fas fa-hand"></i><span>Pinzas de precisión</span></div>
+                    <div class="icon-card anim"><i class="fas fa-wind"></i><span>Aire comprimido / soplador</span></div>
+                    <div class="icon-card anim"><i class="fas fa-paintbrush"></i><span>Brocha antiestática</span></div>
+                    <div class="icon-card anim"><i class="fas fa-spray-can"></i><span>Alcohol isopropílico</span></div>
+                </div>
+                <div class="img-frame img-h-250 anim">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQlTg-avgNXX7nRh7J4dFBYu9MukToZXjfNNjtqtR5b13Uw7OOcAnswDsg&s=10" alt="Herramientas">
+                    <div class="img-label">Kit profesional</div>
+                </div>
+            </div>
+            <div class="grid-4 anim" style="margin-top:15px;">
+                <div class="img-frame img-h-100"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkXq3jpvJJpVs9n_oZw8Qax828YvWZjw8wXnJh1mlEy4WuhAPbmnehVdo&s=10" alt="Destornilladores"><div class="img-label">Destornilladores</div></div>
+                <div class="img-frame img-h-100"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSlLgxYTglASzPZaFPQ44UrESS5wueDIOWqAbASao-1rA&s=10" alt="Pulsera"><div class="img-label">Pulsera ESD</div></div>
+                <div class="img-frame img-h-100"><img src="https://http2.mlstatic.com/D_NQ_NP_693575-MEC93827144251_092025-O.webp" alt="Pasta"><div class="img-label">Pasta térmica</div></div>
+                <div class="img-frame img-h-100"><img src="https://kywiec.vtexassets.com/arquivos/ids/160590-800-auto?v=638380033856230000&width=800&height=auto&aspect=true" alt="Brocha"><div class="img-label">Brocha</div></div>
+            </div>
+        </div>
+
+        <!-- 14. SEGURIDAD -->
+        <div class="slide" data-slide="14">
+            <h2 class="anim"><i class="fas fa-shield-halved"></i> Medidas de Seguridad (Prevención ESD)</h2>
+            <div class="grid-3" style="margin-top:15px;">
+                <div class="card anim" style="text-align:center;">
+                    <i class="fas fa-plug-circle-xmark" style="font-size:1.8rem;color:var(--magenta);margin-bottom:8px;"></i>
+                    <h4>Desconectar</h4>
+                    <p>Apagar y desenchufar completamente el equipo antes de abrir el gabinete.[reference:11]</p>
+                </div>
+                <div class="card anim" style="text-align:center;">
+                    <i class="fas fa-bolt" style="font-size:1.8rem;color:var(--cyan);margin-bottom:8px;"></i>
+                    <h4>Antiestático (ESD)</h4>
+                    <p>Usar pulsera antiestática conectada a tierra o tocar el chasis metálico.[reference:12]</p>
+                </div>
+                <div class="card anim" style="text-align:center;">
+                    <i class="fas fa-table" style="font-size:1.8rem;color:var(--purple);margin-bottom:8px;"></i>
+                    <h4>Mesa limpia</h4>
+                    <p>Superficie despejada y bien iluminada para evitar pérdidas de tornillos.</p>
+                </div>
+                <div class="card anim" style="text-align:center;">
+                    <i class="fas fa-boxes-stacked" style="font-size:1.8rem;color:var(--green);margin-bottom:8px;"></i>
+                    <h4>Organizar</h4>
+                    <p>Separar tornillos y piezas en recipientes para no confundirlos.</p>
+                </div>
+                <div class="card anim" style="text-align:center;">
+                    <i class="fas fa-hand-pointer" style="font-size:1.8rem;color:var(--cyan);margin-bottom:8px;"></i>
+                    <h4>Sin forzar</h4>
+                    <p>Liberar anclajes suavemente. La fuerza excesiva rompe componentes.</p>
+                </div>
+                <div class="card anim" style="text-align:center;">
+                    <i class="fas fa-camera" style="font-size:1.8rem;color:var(--purple);margin-bottom:8px;"></i>
+                    <h4>Documentar</h4>
+                    <p>Fotografiar conexiones antes de desconectar para facilitar el reensamblaje.</p>
+                </div>
+            </div>
+            <div class="alert anim" style="margin-top:15px;">
+                <i class="fas fa-triangle-exclamation"></i>
+                <strong>Nunca abras la fuente de alimentación:</strong> guarda carga eléctrica peligrosa incluso desconectada.
+            </div>
+        </div>
+
+        <!-- 15. FASE 1: DESENSAMBLAJE -->
+        <div class="slide" data-slide="15">
+            <h2 class="anim"><i class="fas fa-box-open"></i> Fase 1: Desensamblaje</h2>
+            <div class="grid-3-2">
+                <div>
+                    <ol>
+                        <li class="anim">Retirar la <strong>tapa del gabinete</strong> (tornillos traseros).</li>
+                        <li class="anim">Desconectar <strong>cables de alimentación y datos</strong>.</li>
+                        <li class="anim">Retirar <strong>tarjetas de expansión</strong> (GPU) y <strong>memoria RAM</strong>.</li>
+                        <li class="anim">Retirar <strong>unidades de almacenamiento</strong> (HDD/SSD).</li>
+                        <li class="anim">Retirar la <strong>fuente de alimentación</strong> (¡no abrirla!).</li>
+                        <li class="anim">Retirar el <strong>disipador del CPU</strong>.</li>
+                        <li class="anim">Retirar la <strong>placa base</strong> (opcional, para limpieza profunda).</li>
+                    </ol>
+                </div>
+                <div class="img-frame img-h-280 anim">
+                    <img src="https://thumbs.dreamstime.com/t/desatornillando-cierre-de-computadora-personal-para-arriba-80826226.jpg" alt="Desarmando PC">
+                    <div class="img-label">Gabinete abierto</div>
+                </div>
+            </div>
+            <div class="grid-4 anim" style="margin-top:12px;">
+                <div class="img-frame img-h-100"><img src="https://us.123rf.com/450wm/zblaster/zblaster2203/zblaster220300074/183337797-el-reparador-del-hombre-est%C3%A1-tratando-de-arreglar-usando-el-destornillador-en-la-computadora-que.jpg?ver=6" alt="Paso 1"><div class="img-label">Tapa</div></div>
+                <div class="img-frame img-h-100"><img src="https://img.magnific.com/foto-gratis/retrato-hembra-trabajando_23-2148836084.jpg?semt=ais_hybrid&w=740&q=80">Cables</div></div>
+                <div class="img-frame img-h-100"><img src="https://www.muycomputer.com/wp-content/uploads/2019/07/cambiar-tarjeta-gr%C3%A1fica-7.jpg" alt="Paso 3"><div class="img-label">Tarjetas</div></div>
+                <div class="img-frame img-h-100"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGbqSUNhptcmRcX9_UJG-MLfNh8ssiKflOtbbfjg4bOwJTZMIQjSufsOjr&s=10" alt="Paso 4"><div class="img-label">Disipador</div></div>
+            </div>
+        </div>
+
+        <!-- 16. FASE 2: LIMPIEZA -->
+        <div class="slide" data-slide="16">
+            <h2 class="anim"><i class="fas fa-broom"></i> Fase 2: Limpieza y Mantenimiento</h2>
+            <div class="grid-2">
+                <div>
+                    <div class="card anim" style="margin-bottom:8px;">
+                        <h4><i class="fas fa-fan"></i> Gabinete y ventiladores</h4>
+                        <p>Brocha + aire comprimido. <strong>Bloquea las aspas</strong> al soplar para no dañar el rodamiento.</p>
+                    </div>
+                    <div class="card anim" style="margin-bottom:8px;">
+                        <h4><i class="fas fa-memory"></i> Placa base y tarjetas</h4>
+                        <p>Brocha suave. Limpia contactos dorados con <strong>goma de borrar blanca</strong>.</p>
+                    </div>
+                    <div class="card anim" style="margin-bottom:8px;">
+                        <h4><i class="fas fa-microchip"></i> CPU y disipador</h4>
+                        <p>Retira pasta vieja con alcohol isopropílico. Aplica pasta nueva.</p>
+                    </div>
+                    <div class="card anim">
+                        <h4><i class="fas fa-plug"></i> Fuente de alimentación</h4>
+                        <p>Solo limpiar el exterior y el ventilador. <strong>Nunca abrirla</strong>.</p>
+                    </div>
+                </div>
+                <div class="grid-2" style="gap:10px;">
+                    <div class="img-frame img-h-130 anim"><img src="https://st5.depositphotos.com/65154472/70199/i/450/depositphotos_701995872-stock-photo-cairo-egypt-february-2024-gigabyte.jpg" alt="Limpieza"><div class="img-label">Limpieza</div></div>
+                    <div class="img-frame img-h-130 anim"><img src="https://mx.chemtronics.com/content/images/thumbs/0002695_is-computer-duster-and-freeze-spray-the-same.jpeg" alt="Aire"><div class="img-label">Aire comprimido</div></div>
+                    <div class="img-frame img-h-130 anim"><img src="https://hardzone.es/app/uploads-hardzone.es/2022/08/Brocha-limpiar-placa-base.jpg?x=480&quality=80" alt="Brocha"><div class="img-label">Brocha</div></div>
+                    <div class="img-frame img-h-130 anim"><img src="https://d1q3zw97enxzq2.cloudfront.net/images/XTM70_THERMAL_COMPOUND_03.width-1000.format-webp.webp" alt="Pasta"><div class="img-label">Pasta nueva</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 17. FASE 3: ENSAMBLAJE -->
+        <div class="slide" data-slide="17">
+            <h2 class="anim"><i class="fas fa-cubes"></i> Fase 3: Ensamblaje</h2>
+            <div class="grid-3-2">
+                <div>
+                    <ol>
+                        <li class="anim">Instalar <strong>CPU y disipador</strong> en la placa base (con pasta térmica).</li>
+                        <li class="anim">Instalar la <strong>memoria RAM</strong> en sus ranuras.</li>
+                        <li class="anim">Colocar la <strong>placa base</strong> en el gabinete.</li>
+                        <li class="anim">Instalar la <strong>fuente de alimentación</strong>.</li>
+                        <li class="anim">Instalar <strong>HDD/SSD</strong> en sus bahías.</li>
+                        <li class="anim">Instalar la <strong>tarjeta gráfica</strong> en la ranura PCIe.</li>
+                        <li class="anim">Conectar <strong>todos los cables</strong> (24 pines, 8 pines CPU, SATA, paneles).</li>
+                    </ol>
+                </div>
+                <div class="img-frame img-h-280 anim">
+                    <img src="https://m.media-amazon.com/images/I/71SEQAlrYhL._AC_UF1000,1000_QL80_.jpg" alt="Ensamblaje">
+                    <div class="img-label">Ensamblaje final</div>
+                </div>
+            </div>
+            <div class="grid-4 anim" style="margin-top:12px;">
+                <div class="img-frame img-h-100"><img src="https://images.unsplash.com/photo-1555617981-dac3880eac6e?q=80&w=800&auto=format&fit=crop" alt="CPU"><div class="img-label">CPU</div></div>
+                <div class="img-frame img-h-100"><img src="https://www.godaddy.com/resources/latam/wp-content/uploads/sites/4/2024/11/portada_memoria-ram_11zon.png?size=1250x625" alt="RAM"><div class="img-label">RAM</div></div>
+                <div class="img-frame img-h-100"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkp6QBa8X_yXX-aDTOgVyJWtWbxkKN0qBbxeVBYj4f4TWrO1AFuzyunUtS&s=10" alt="Cables"><div class="img-label">Cables</div></div>
+                <div class="img-frame img-h-100"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-4Gs4ZoY4Ck5kCh4lbBpO7oa_gfDytVLw9ErPgngvxdHYQYIOSwtKeQm7&s=10" alt="Final"><div class="img-label">Final</div></div>
+            </div>
+        </div>
+
+        <!-- 18. COMPROBACIÓN -->
+        <div class="slide" data-slide="18">
+            <h2 class="anim"><i class="fas fa-power-off"></i> Comprobación de Funcionamiento</h2>
+            <div class="grid-2">
+                <div>
+                    <p class="anim"><strong>Antes de poner la tapa</strong>, conecta el equipo y enciéndelo para verificar que todo esté correcto.</p>
+                    <ul style="margin-top:12px;">
+                        <li class="anim"><i class="fas fa-fan" style="color:var(--cyan);"></i> Los <strong>ventiladores giran</strong> correctamente.</li>
+                        <li class="anim"><i class="fas fa-terminal" style="color:var(--cyan);"></i> La <strong>BIOS se inicia</strong> sin problemas.</li>
+                        <li class="anim"><i class="fas fa-volume-up" style="color:var(--cyan);"></i> <strong>Sin pitidos de error</strong>.</li>
+                        <li class="anim"><i class="fas fa-desktop" style="color:var(--cyan);"></i> Imagen en el <strong>monitor</strong>.</li>
+                        <li class="anim"><i class="fas fa-microchip" style="color:var(--cyan);"></i> <strong>Temperaturas normales</strong> (30-60°C en reposo).</li>
+                        <li class="anim"><i class="fas fa-check" style="color:var(--cyan);"></i> Si todo funciona: <strong>apagar, poner tapa y atornillar</strong>.</li>
+                    </ul>
+                </div>
+                <div class="grid-2" style="gap:10px;">
+                    <div class="img-frame img-h-130 anim"><img src="https://www.bestcell.com.ec/img/hqdefault.webp" alt="PC"><div class="img-label">PC encendida</div></div>
+                    <div class="img-frame img-h-130 anim"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpHK1XYjUXZjNoeA35MqMDlRWEcXRQ11mRBAvg8ApKiQT-guDcP64XKs5k&s=10" alt="BIOS"><div class="img-label">BIOS</div></div>
+                    <div class="img-frame img-h-130 anim"><img src="https://i.redd.it/gyhj227krdjf1.png" alt="Monitor"><div class="img-label">Monitor</div></div>
+                    <div class="img-frame img-h-130 anim"><img src="https://i.redd.it/onngh9jtvzz71.png" alt="Temperatura"><div class="img-label">Temperatura</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 19. CONCLUSIÓN -->
+        <div class="slide" data-slide="19">
+            <h2 class="anim"><i class="fas fa-flag-checkered"></i> Conclusión</h2>
+            <div class="grid-2">
+                <div class="card anim">
+                    <h4><i class="fas fa-clock"></i> Mantenimiento regular</h4>
+                    <p>Prolonga la vida útil de la computadora y evita fallos costosos.</p>
+                </div>
+                <div class="card anim">
+                    <h4><i class="fas fa-fill-drip"></i> Pasta térmica</h4>
+                    <p>Esencial para una correcta disipación del calor del procesador.</p>
+                </div>
+                <div class="card anim">
+                    <h4><i class="fas fa-shield-halved"></i> Seguridad</h4>
+                    <p>Seguir las medidas antiestáticas evita daños a los componentes.</p>
+                </div>
+                <div class="card anim">
+                    <h4><i class="fas fa-cubes"></i> Ensamblaje correcto</h4>
+                    <p>Un armado ordenado garantiza estabilidad y rendimiento óptimo.</p>
+                </div>
+            </div>
+            <div class="alert alert-green anim" style="margin-top:15px;">
+                <i class="fas fa-graduation-cap"></i>
+                <strong>¡Ahora estás preparado!</strong> Puedes realizar mantenimiento preventivo y correctivo a una PC con seguridad.
+            </div>
+            <div class="grid-4 anim" style="margin-top:12px;">
+                <div class="img-frame img-h-100"><img src="https://images.unsplash.com/photo-1555617981-dac3880eac6e?q=80&w=800&auto=format&fit=crop" alt="CPU"><div class="img-label">CPU</div></div>
+                <div class="img-frame img-h-100"><img src="https://acf.geeknetic.es/imgri/imagenes/auto/20/06/17/eaj-jgv-71t7np6iz6l-sl1500.jpg?f=webp" alt="Pasta"><div class="img-label">Pasta</div></div>
+                <div class="img-frame img-h-100"><img src="https://i0.wp.com/www.tuprogramaras.com/wp-content/uploads/2014/03/tools.jpg?w=438&ssl=1" alt="Herramientas"><div class="img-label">Herramientas</div></div>
+                <div class="img-frame img-h-100"><img src="https://img.unocero.com/2017/04/pcmonitor.jpg" alt="PC"><div class="img-label">PC final</div></div>
+            </div>
+        </div>
+
+        <!-- 20. GRACIAS + DESCARGA -->
+        <div class="slide" data-slide="20">
+            <h2 class="anim"><i class="fas fa-hand-peace"></i> ¡Gracias por su Atención!</h2>
+            <p class="anim" style="text-align:center;font-size:1.1rem;margin-bottom:10px;">¿Preguntas? ¿Comentarios?</p>
+            <div class="video-container anim">
+                <!-- REEMPLAZA VIDEO_ID_AQUI CON TU VIDEO DE YOUTUBE -->
+                <iframe src="PC.mp4" title="Video de ensamblaje" allowfullscreen></iframe>
+            </div>
+            <div class="download-section anim">
+                <p style="margin-bottom:12px;color:var(--text);"><i class="fas fa-file-pdf" style="color:var(--cyan);"></i> Descarga la presentación completa en PDF:</p>
+                <button class="btn-download" id="downloadBtn">
+                    <i class="fas fa-download"></i> Descargar Diapositivas en PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Dots de navegación -->
+        <div class="dots" id="dots"></div>
+
+        <!-- Controles -->
+        <div class="controls">
+            <button class="nav-btn" id="prevBtn" title="Anterior"><i class="fas fa-chevron-left"></i></button>
+            <button class="nav-btn" id="nextBtn" title="Siguiente"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         JAVASCRIPT
+         ============================================================ -->
+    <script>
+        // ============================================
+        // PARTÍCULAS DE FONDO
+        // ============================================
+        (function createParticles() {
+            const container = document.getElementById('particles');
+            const colors = ['#00f0ff', '#b537f2', '#ff006e', '#39ff14'];
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = Math.random() * 3 + 1;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.background = colors[Math.floor(Math.random() * colors.length)];
+                p.style.boxShadow = `0 0 ${size * 3}px currentColor`;
+                p.style.animationDuration = (Math.random() * 15 + 12) + 's';
+                p.style.animationDelay = (Math.random() * 15) + 's';
+                p.style.opacity = Math.random() * 0.5 + 0.2;
+                container.appendChild(p);
+            }
+        })();
+
+        // ============================================
+        // NAVEGACIÓN DE DIAPOSITIVAS
+        // ============================================
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        const currentNum = document.getElementById('currentNum');
+        const totalNum = document.getElementById('totalNum');
+        const dotsContainer = document.getElementById('dots');
+        let currentSlide = 0;
+
+        totalNum.textContent = String(totalSlides).padStart(2, '0');
+
+        // Crear indicadores (dots)
+        slides.forEach((_, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'dot' + (i === 0 ? ' active' : '');
+            dot.addEventListener('click', () => showSlide(i));
+            dotsContainer.appendChild(dot);
+        });
+        const dots = document.querySelectorAll('.dot');
+
+        function showSlide(index) {
+            // Lógica circular
+            if (index >= totalSlides) currentSlide = 0;
+            else if (index < 0) currentSlide = totalSlides - 1;
+            else currentSlide = index;
+
+            // Actualizar clases
+            slides.forEach(s => s.classList.remove('active'));
+            slides[currentSlide].classList.add('active');
+            slides[currentSlide].scrollTop = 0; // Resetear scroll
+
+            // Actualizar barra de progreso y contador
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = progress + '%';
+            currentNum.textContent = String(currentSlide + 1).padStart(2, '0');
+
+            // Actualizar dots
+            dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+
+            // Deshabilitar botón anterior en la primera diapositiva
+            prevBtn.disabled = currentSlide === 0;
+        }
+
+        // Event listeners para botones
+        nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+        prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+
+        // Navegación por teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                showSlide(currentSlide + 1);
+            } else if (e.key === 'ArrowLeft') {
+                showSlide(currentSlide - 1);
+            }
+        });
+
+        // Soporte para gestos táctiles (swipe)
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', e => {
+            const diff = touchStartX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 60) {
+                showSlide(currentSlide + (diff > 0 ? 1 : -1));
+            }
+        }, { passive: true });
+
+        // Inicializar
+        showSlide(0);
+
+
+        // ============================================
+        // DESCARGA EN PDF
+        // ============================================
+        document.getElementById('downloadBtn').addEventListener('click', async function () {
+            const btn = this;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
+            btn.disabled = true;
+
+            const savedIndex = currentSlide;
+            document.body.classList.add('downloading');
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const pdfW = pdf.internal.pageSize.getWidth();
+                const pdfH = pdf.internal.pageSize.getHeight();
+
+                for (let i = 0; i < slides.length; i++) {
+                    // Mostrar temporalmente la diapositiva i
+                    slides.forEach(s => s.classList.remove('active'));
+                    slides[i].classList.add('active');
+
+                    // Esperar a que se renderice
+                    await new Promise(r => setTimeout(r, 300));
+
+                    const canvas = await html2canvas(slides[i], {
+                        scale: 2,
+                        backgroundColor: '#030014',
+                        useCORS: true,
+                        logging: false,
+                        windowWidth: slides[i].scrollWidth,
+                        windowHeight: slides[i].scrollHeight
+                    });
+
+                    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+                    const ratio = canvas.width / canvas.height;
+                    const pdfRatio = pdfW / pdfH;
+
+                    let imgW, imgH, x, y;
+                    if (ratio > pdfRatio) {
+                        imgW = pdfW;
+                        imgH = pdfW / ratio;
+                        x = 0;
+                        y = (pdfH - imgH) / 2;
+                    } else {
+                        imgH = pdfH;
+                        imgW = pdfH * ratio;
+                        x = (pdfW - imgW) / 2;
+                        y = 0;
+                    }
+
+                    if (i > 0) pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', x, y, imgW, imgH);
+                }
+
+                pdf.save('Ensamblaje-Mantenimiento-PC.pdf');
+
+                // Restaurar estado original
+                slides.forEach(s => s.classList.remove('active'));
+                slides[savedIndex].classList.add('active');
+                currentSlide = savedIndex;
+
+            } catch (err) {
+                console.error(err);
+                alert('Ocurrió un error al generar el PDF: ' + err.message + '\n\nSugerencia: intenta de nuevo o reduce el tamaño de las imágenes.');
+            } finally {
+                document.body.classList.remove('downloading');
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
